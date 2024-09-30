@@ -1,6 +1,8 @@
 // src/components/QuizAdmin.js
 import React, { useState, useEffect } from "react";
 import { getQuizzes, createQuiz, updateQuiz, deleteQuiz } from "./api";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const QuizAdmin = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -40,13 +42,19 @@ const QuizAdmin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      await updateQuiz(editingId, quizData);
-    } else {
-      await createQuiz(quizData);
+    try {
+      if (editingId) {
+        await updateQuiz(editingId, quizData);
+        toast.success("Quiz updated successfully!");
+      } else {
+        await createQuiz(quizData);
+        toast.success("Quiz created successfully!");
+      }
+      fetchQuizzes();
+      resetForm();
+    } catch (error) {
+      toast.error("Error while saving quiz!");
     }
-    fetchQuizzes();
-    resetForm();
   };
 
   const resetForm = () => {
@@ -60,13 +68,19 @@ const QuizAdmin = () => {
   };
 
   const handleDelete = async (id) => {
-    await deleteQuiz(id);
-    fetchQuizzes();
+    try {
+      await deleteQuiz(id);
+      toast.success("Quiz deleted successfully!");
+      fetchQuizzes();
+    } catch (error) {
+      toast.error("Error while deleting quiz!");
+    }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-4">Quiz Admin Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-r from-purple-400 to-pink-400 p-6">
+      <ToastContainer />
+      <h1 className="text-3xl font-bold mb-4 mt-10">Quiz Admin Dashboard</h1>
       <form onSubmit={handleSubmit} className="bg-gray-100 p-4 rounded-lg shadow-md mb-6">
         <input
           type="text"
