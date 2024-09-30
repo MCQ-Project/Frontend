@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Quiz from './pages/Quiz';
 import QuizResults from './pages/QuizResults';
 import ForgotPassword from './component/Forgotpass';
+import Admin from './component/QuizAdmin';
 
 const App = () => {
   return (
@@ -15,6 +16,7 @@ const App = () => {
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/quiz-results" element={<QuizResults />} />
         <Route path="/forgot" element={<ForgotPassword/>} />
+        <Route path="/admin" element={<Admin/>} />
       </Routes>
     </Router>
   );
