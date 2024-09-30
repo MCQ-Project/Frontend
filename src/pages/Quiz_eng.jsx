@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import Modal from './Modal'; // Import the Modal component
+import { toast } from 'react-toastify'; // Import toast
 
 const Quiz = () => {
   const [quizData, setQuizData] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
-  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null); // Track the selected answer index
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
+  const [userName, setUserName] = useState('John Doe'); // Placeholder for user's name
+  const [feedback, setFeedback] = useState(''); // Feedback state
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
 
-  // Fetching quiz data from the API
   useEffect(() => {
     const fetchQuizData = async () => {
       try {
         const response = await fetch('http://localhost:8081/api/quiz/quizzes');
         const data = await response.json();
-        console.log("Quiz data fetched successfully:", data);
         const filteredData = data.filter(quiz => quiz.category === 'EngineeringEntrance');
         setQuizData(filteredData);
       } catch (error) {
@@ -24,22 +27,24 @@ const Quiz = () => {
   }, []);
 
   const handleAnswer = (isCorrect, index) => {
-    setSelectedAnswerIndex(index); // Set the selected answer index
+    setSelectedAnswerIndex(index);
     if (isCorrect) {
       setScore(score + 1);
     }
   };
 
   const handleNextQuestion = () => {
-    setSelectedAnswerIndex(null); // Reset selected answer index for the next question
+    setSelectedAnswerIndex(null);
     if (currentQuestionIndex < quizData.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       setIsQuizCompleted(true);
+      toast.info("Quiz completed! Please provide your feedback."); // Notify user
     }
   };
 
   const handleSubmitResults = async () => {
+    const percentage = (score / quizData.length) * 100;
     try {
       const response = await fetch('http://localhost:8081/api/quizresult/', {
         method: 'POST',
@@ -47,8 +52,12 @@ const Quiz = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          score: score,
-          totalQuestions: quizData.length,
+          userName,
+          category: 'EngineeringEntrance',
+          attemptedQuestions: quizData.length,
+          correctAnswers: score,
+          percentage: percentage.toFixed(2),
+          feedback: feedback || "Well done! Keep practicing."
         }),
       });
       if (!response.ok) {
@@ -56,16 +65,22 @@ const Quiz = () => {
       }
       const result = await response.json();
       console.log("Quiz results submitted successfully:", result);
+      toast.success("Quiz results submitted successfully!"); // Show success toast
     } catch (error) {
       console.error("Error submitting quiz results:", error);
+      toast.error("Failed to submit quiz results. Please try again."); // Show error toast
     }
   };
 
   useEffect(() => {
     if (isQuizCompleted) {
-      handleSubmitResults(); // Submit results when the quiz is completed
+      setIsModalOpen(true); // Open modal when quiz is completed
     }
   }, [isQuizCompleted]);
+
+  const handleModalSubmit = () => {
+    handleSubmitResults(); // Submit results when modal form is submitted
+  };
 
   if (isQuizCompleted) {
     return (
@@ -77,6 +92,15 @@ const Quiz = () => {
         >
           Play Again
         </button>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleModalSubmit}
+          userName={userName}
+          setUserName={setUserName}
+          feedback={feedback}
+          setFeedback={setFeedback}
+        />
       </div>
     );
   }
@@ -107,7 +131,7 @@ const Quiz = () => {
                 <button
                   onClick={() => handleAnswer(answer.correct, index)}
                   className="w-full text-left"
-                  disabled={selectedAnswerIndex !== null} // Disable buttons after an answer is selected
+                  disabled={selectedAnswerIndex !== null}
                 >
                   {answer.text}
                 </button>
@@ -129,9 +153,10 @@ const Quiz = () => {
           <p className="text-gray-600">Question {currentQuestionIndex + 1} of {quizData.length}</p>
         </div>
         {selectedAnswerIndex !== null && (
-          <div className="mt-4 p-4 border rounded bg-gray-100">
-            <h3 className="font-semibold">Explanation:</h3>
-            <p>{currentQuestion.explanation}</p> {/* Display explanation here */}
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">
+              {currentQuestion.explanation}
+            </p>
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isAuthenticated = !!localStorage.getItem("user"); // Check if user is logged in
 
   // Define your navigation links here
   const navLinks = [
@@ -12,6 +13,11 @@ const Navbar = () => {
     { path: '/quiz_eng', name: 'Engineering Entrance' },
     { path: '/quiz-results', name: 'Quiz Results' }
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem("user"); // Remove user from local storage
+    window.location.reload(); // Optionally reload to refresh the state
+  };
 
   return (
     <nav className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 shadow-lg fixed w-full z-10">
@@ -36,6 +42,23 @@ const Navbar = () => {
               </li>
             ))}
           </ul>
+
+          {/* Login/Logout Button */}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="text-white hover:text-gray-200 transition duration-300"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="text-white hover:text-gray-200 transition duration-300"
+            >
+              Login
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -78,6 +101,24 @@ const Navbar = () => {
                 </Link>
               </li>
             ))}
+
+            {/* Login/Logout Button in Mobile Menu */}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-300"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition duration-300"
+                onClick={() => setMobileMenuOpen(false)} // Close menu on link click
+              >
+                Login
+              </Link>
+            )}
           </ul>
         </motion.div>
       )}
